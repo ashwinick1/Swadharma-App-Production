@@ -1,0 +1,34 @@
+workflows:
+  ios-build:
+    name: Swadharma iOS Build
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      node: 22.11.0
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+
+      - name: Build iOS
+        script: |
+          xcodebuild \
+            -workspace ios/Swadharma.xcworkspace \
+            -scheme Swadharma \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -derivedDataPath build/ios
+
+    artifacts:
+      - build/ios/Build/Products/Release-iphoneos/*.app
