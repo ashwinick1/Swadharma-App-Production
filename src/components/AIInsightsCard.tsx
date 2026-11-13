@@ -4,38 +4,69 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 
-const AIInsightsCard = () => {
+import {useNavigation} from '@react-navigation/native';
+
+interface AIInsightsCardProps {
+  userId?: number;
+}
+
+const AIInsightsCard = ({
+  userId,
+}: AIInsightsCardProps) => {
+  const navigation = useNavigation();
+
+  const handleViewInsights = () => {
+    if (!userId) {
+      console.log(
+        'AI Insights: userId is missing',
+      );
+      return;
+    }
+
+    navigation.navigate(
+      'AIInsights' as never,
+      {
+        userId,
+      } as never,
+    );
+  };
+
   return (
     <View style={styles.card}>
 
       {/* Header */}
-      
 
-        <View style={styles.headerText}>
-          <Text style={styles.title}>AI Insights</Text>
+      <View style={styles.headerText}>
+        <Text style={styles.title}>
+          AI Insights
+        </Text>
 
-          <Text style={styles.subtitle}>
-            Personalized guidance powered by AI
-          </Text>
-        </View>
-
-   
+        <Text style={styles.subtitle}>
+          Personalized guidance powered by AI
+        </Text>
+      </View>
 
       {/* Divider */}
+
       <View style={styles.divider} />
 
       {/* Description */}
+
       <Text style={styles.description}>
-        Complete your Swadharma assessments to unlock AI-powered insights about
-        your personality, strengths, career path, relationships, and life
-        purpose.
+        Complete your Swadharma assessments to
+        unlock AI-powered insights about your
+        personality, strengths, career path,
+        relationships, and life purpose.
       </Text>
 
       {/* Button */}
-      <TouchableOpacity style={styles.button}>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleViewInsights}
+        activeOpacity={0.8}>
         <Text style={styles.buttonText}>
           View AI Insights
         </Text>
@@ -56,18 +87,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  icon: {
-    width: 50,
-    height: 50,
-    resizeMode: 'contain',
-    marginRight: 12,
-  },
-
   headerText: {
     flex: 1,
   },
@@ -82,7 +101,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
     color: '#FFE8D8',
     fontSize: 17,
-     fontWeight: '900',
+    fontWeight: '900',
   },
 
   divider: {
@@ -95,7 +114,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     lineHeight: 22,
-     fontWeight: '900',
+    fontWeight: '900',
   },
 
   button: {

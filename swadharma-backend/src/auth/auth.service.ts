@@ -1,11 +1,14 @@
+
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
   ) {}
 
   // Email OTP storage
@@ -27,13 +30,42 @@ export class AuthService {
 
       this.otpStore.set(identifier, otp);
 
-      // Keep your existing email OTP sending logic here
-      console.log(`Email OTP for ${identifier}: ${otp}`);
+      try {
+        const response = await this.mailService.sendEmail(
+          identifier,
+          'Your Swadharma Verification OTP',
+          `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+              <h2>Swadharma Verification</h2>
+              <p>Your email verification OTP is:</p>
+              <h1 style="color: #ff6600; letter-spacing: 5px;">
+                ${otp}
+              </h1>
+              <p>Please do not share this OTP with anyone.</p>
+              <p>Regards,<br/>Swadharma Team</p>
+            </div>
+          `,
+        );
 
-      return {
-        success: true,
-        message: 'OTP sent successfully',
-      };
+        console.log('Email sent successfully:', response.messageId);
+
+        return {
+          success: true,
+          message: 'OTP sent successfully',
+        };
+      } catch (error: any) {
+        this.otpStore.delete(identifier);
+
+        console.error(
+          'Email OTP sending failed:',
+          error?.response?.data || error.message,
+        );
+
+        return {
+          success: false,
+          message: 'Unable to send email OTP',
+        };
+      }
     }
 
     // =========================
@@ -51,17 +83,13 @@ export class AuthService {
         {
           params: {
             countryCode: '91',
-            customerId:
-              process.env.MESSAGE_CENTRAL_CUSTOMER_ID,
+            customerId: process.env.MESSAGE_CENTRAL_CUSTOMER_ID,
             flowType: 'SMS',
             mobileNumber: phoneNumber,
-
-            // Request 6-digit OTP
             otpLength: 6,
           },
           headers: {
-            authToken:
-              process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
+            authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
             accept: '*/*',
           },
         },
@@ -69,10 +97,7 @@ export class AuthService {
 
       const data = response.data;
 
-      console.log(
-        'MessageCentral response:',
-        data,
-      );
+      console.log('MessageCentral response:', data);
 
       if (
         data?.responseCode !== 200 ||
@@ -84,8 +109,7 @@ export class AuthService {
         };
       }
 
-      const verificationId =
-        data.data.verificationId;
+      const verificationId = data.data.verificationId;
 
       // Store verificationId against mobile number
       this.mobileVerificationStore.set(
@@ -94,7 +118,7 @@ export class AuthService {
       );
 
       console.log(
-        `MessageCentral verificationId for ${phoneNumber}: ${verificationId}`,
+        `MessageCentral verificationId stored for ${phoneNumber}`,
       );
 
       return {
@@ -104,8 +128,7 @@ export class AuthService {
     } catch (error: any) {
       console.error(
         'MessageCentral SMS error:',
-        error?.response?.data ||
-          error.message,
+        error?.response?.data || error.message,
       );
 
       return {
@@ -120,16 +143,13 @@ export class AuthService {
     otp: string,
   ) {
     const isEmail =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        identifier,
-      );
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
     // =========================
     // EMAIL OTP
     // =========================
     if (isEmail) {
-      const storedOtp =
-        this.otpStore.get(identifier);
+      const storedOtp = this.otpStore.get(identifier);
 
       if (storedOtp !== otp) {
         return {
@@ -140,10 +160,9 @@ export class AuthService {
 
       this.otpStore.delete(identifier);
 
-      const user =
-        await this.usersService.findByIdentifier(
-          identifier,
-        );
+      const user = await this.usersService.findByIdentifier(
+        identifier,
+      );
 
       return {
         success: true,
@@ -164,9 +183,7 @@ export class AuthService {
       : identifier;
 
     const verificationId =
-      this.mobileVerificationStore.get(
-        phoneNumber,
-      );
+      this.mobileVerificationStore.get(phoneNumber);
 
     if (!verificationId) {
       return {
@@ -185,8 +202,7 @@ export class AuthService {
             code: otp,
           },
           headers: {
-            authToken:
-              process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
+            authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
             accept: 'application/json',
           },
         },
@@ -211,14 +227,11 @@ export class AuthService {
       }
 
       // OTP successfully verified
-      this.mobileVerificationStore.delete(
-        phoneNumber,
-      );
+      this.mobileVerificationStore.delete(phoneNumber);
 
-      const user =
-        await this.usersService.findByIdentifier(
-          identifier,
-        );
+      const user = await this.usersService.findByIdentifier(
+        identifier,
+      );
 
       return {
         success: true,
@@ -231,8 +244,7 @@ export class AuthService {
     } catch (error: any) {
       console.error(
         'MessageCentral verification error:',
-        error?.response?.data ||
-          error.message,
+        error?.response?.data || error.message,
       );
 
       return {

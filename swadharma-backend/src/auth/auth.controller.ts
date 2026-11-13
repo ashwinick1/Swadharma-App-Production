@@ -1,28 +1,50 @@
-import { Body, Controller, Post } from '@nestjs/common';
+
+import {
+  Body,
+  Controller,
+  Post,
+  BadRequestException,
+} from '@nestjs/common';
+
 import { AuthService } from './auth.service';
-import { SendOtpDto } from './dto/send-otp.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
 
   @Post('send-otp')
-  sendOtp(@Body() dto: SendOtpDto) {
-    return this.authService.sendOtp(dto.identifier);
+  async sendOtp(
+    @Body() dto: { identifier: string },
+  ) {
+    if (!dto || !dto.identifier) {
+      throw new BadRequestException(
+        'Email or mobile number is required',
+      );
+    }
+
+    return this.authService.sendOtp(
+      dto.identifier.trim(),
+    );
   }
 
   @Post('verify-otp')
-verifyOtp(@Body() dto: VerifyOtpDto) {
-  console.log('Verify OTP Body:', dto);
+  async verifyOtp(
+    @Body() dto: {
+      identifier: string;
+      otp: string;
+    },
+  ) {
+    if (!dto?.identifier || !dto?.otp) {
+      throw new BadRequestException(
+        'Identifier and OTP are required',
+      );
+    }
 
-  if (!dto) {
-    return {
-      success: false,
-      message: 'Request body is missing',
-    };
+    return this.authService.verifyOtp(
+      dto.identifier.trim(),
+      dto.otp.trim(),
+    );
   }
-
-  return this.authService.verifyOtp(dto.identifier, dto.otp);
-}
 }

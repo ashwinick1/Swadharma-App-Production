@@ -2,10 +2,16 @@ import {
   Body,
   Controller,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { HoroscopeService } from './horoscope.service';
+
 import { CreateHoroscopeDto } from './dto/create-horoscope.dto';
+
 import { ViewHoroscopeDto } from './dto/view-horoscope.dto';
 
 @Controller('horoscope')
@@ -14,7 +20,11 @@ export class HoroscopeController {
     private readonly horoscopeService: HoroscopeService,
   ) {}
 
-  // Save birth details
+  // =====================================================
+  // Save Birth Details
+  // POST /horoscope
+  // =====================================================
+
   @Post()
   async create(
     @Body()
@@ -25,7 +35,11 @@ export class HoroscopeController {
     );
   }
 
+  // =====================================================
   // Generate / View Horoscope
+  // POST /horoscope/view
+  // =====================================================
+
   @Post('view')
   async viewHoroscope(
     @Body()
@@ -33,6 +47,24 @@ export class HoroscopeController {
   ) {
     return await this.horoscopeService.viewHoroscope(
       body,
+    );
+  }
+
+  // =====================================================
+  // Upload Horoscope Image / PDF
+  // POST /horoscope/upload
+  // =====================================================
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file'),
+  )
+  async uploadHoroscope(
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return await this.horoscopeService.uploadHoroscope(
+      file,
     );
   }
 }
