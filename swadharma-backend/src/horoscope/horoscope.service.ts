@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { createWorker } from 'tesseract.js';
-import { PDFParse } from 'pdf-parse';
+
 
 import { Horoscope } from './entities/horoscope.entity';
 import { CreateHoroscopeDto } from './dto/create-horoscope.dto';
@@ -270,7 +270,7 @@ export class HoroscopeService {
         console.log(
           'Starting PDF text extraction...',
         );
-
+const { PDFParse } = await import('pdf-parse');
         const parser = new PDFParse({
           data: file.buffer,
         });
