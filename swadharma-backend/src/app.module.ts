@@ -17,7 +17,7 @@ import { SwadharmaReportModule } from './swadharma-report/swadharma-report.modul
 import { MailModule } from './mail/mail.module';
 import { JohariModule } from './johari/johari.module';
 import { FamilyFeedbackModule } from './family-feedback/family-feedback.module';
-import {SupportModule} from './support/support.module';
+import { SupportModule } from './support/support.module';
 import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
@@ -28,13 +28,12 @@ import { NotificationsModule } from './notifications/notifications.module';
 
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT || 5432),
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'Swadharma@123',
-      database: process.env.DB_NAME || 'swadharma',
+      url: process.env.POSTGRES_URL || process.env.DATABASE_URL,
       autoLoadEntities: true,
       synchronize: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
 
     UsersModule,
@@ -48,9 +47,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     MailModule,
     JohariModule,
     FamilyFeedbackModule,
-    MailModule,
-SupportModule,
-  NotificationsModule,
+    SupportModule,
+    NotificationsModule,
   ],
 
   controllers: [AppController],
