@@ -1,26 +1,55 @@
+
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { AppModule } from './app.module';
+import express from 'express';
 import { join } from 'path';
+import 'pg';
 
-async function bootstrap() {
-  const app =
-    await NestFactory.create<NestExpressApplication>(
-      AppModule,
-    );
+async function createApp() {
+  const server = express();
+
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    new ExpressAdapter(server),
+  );
 
   app.enableCors({
     origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
     credentials: true,
   });
 
-  // Serve uploaded images
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.init();
+
+  return { app, server };
 }
-bootstrap();
+
+// Local development
+if (!process.env.VERCEL) {
+  async function bootstrap() {
+    const { app } = await createApp();
+    await app.listen(process.env.PORT || 3000);
+  }
+
+  bootstrap();
+}
+
+// Vercel serverless handler
+let appPromise: ReturnType<typeof createApp> | undefined;
+
+export default async function handler(
+  req: express.Request,
+  res: express.Response,
+) {
+  appPromise ??= createApp();
+
+  const { server } = await appPromise;
+
+  return server(req, res);
+}
