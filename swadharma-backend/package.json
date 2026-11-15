@@ -33,7 +33,7 @@
     "nodemailer": "^10.0.15",
     "openai": "^6.49.0",
     "pdf-parse": "^2.4.5",
-    "pg": "^8.22.0",
+    "pg": "^8.23.1",
     "react-native-document-picker": "^9.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
